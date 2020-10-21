@@ -20,7 +20,7 @@ from .utils import get_google_client_id
 
 def save_and_send_login(data):
     url = 'https://www.w3schools.com/python/demopage.php'
-    # result = request.post(url, data=data)
+    result = request.post(url, data=data)
 
     serializer = UserLoginHistorySerializer(data=data)
     if serializer.is_valid():
