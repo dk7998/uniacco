@@ -1,5 +1,7 @@
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, ModelViewSet
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from rest_framework import status
 
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -13,14 +15,14 @@ from django.contrib.auth.base_user import BaseUserManager
 
 import requests
 
-from .serializers import UserSerializer, UserLoginHistorySerializer, GoogleLoginSerializer
-from .models import User
+from .serializers import UserSerializer, UserLoginHistorySerializer, GoogleLoginSerializer, BankDetailsSerializer
+from .models import User, BankDetails
 from .utils import get_google_client_id
 
 
 def save_and_send_login(data):
     url = 'https://www.w3schools.com/python/demopage.php'
-    result = request.post(url, data=data)
+    result = requests.post(url, data=data)
 
     serializer = UserLoginHistorySerializer(data=data)
     if serializer.is_valid():
@@ -41,6 +43,25 @@ class UserViewSet(ViewSet):
             res['errors']  =  serializer.errors
             print('error_messages', serializer.error_messages)
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SignupViewSet(ViewSet):
+
+    def create(self, request):
+        data = request.data
+        res = {}
+        if 'username' not in data or 'password' not in data:
+            res['message'] = 'Please enter username and password for signing up'
+            return Response(res, status=400)
+        
+        obj, created = User.objects.get_or_create(**data)
+        if created:
+            res['message'] = 'User signed up successfully!'
+        else:
+            res['message'] = 'User with this username already exixts'
+        
+        return Response(res)
+
 
 
 class Login(TokenObtainPairView):
@@ -95,3 +116,13 @@ class GoogleLoginViewSet(ViewSet):
         except ValueError:
             res['message'] = 'Failed to login user using Google!'
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BankDetailsViewSet(ModelViewSet):
+    serializer_class = BankDetailsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = user.bank_details.all()
+        return queryset

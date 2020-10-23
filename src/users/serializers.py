@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, UserLoginHistory
+from .models import User, UserLoginHistory, BankDetails
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,4 +29,12 @@ class GoogleLoginSerializer(serializers.ModelSerializer):
 class UserLoginHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLoginHistory
+        fields = '__all__'
+
+
+class BankDetailsSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    
+    class Meta:
+        model = BankDetails
         fields = '__all__'
